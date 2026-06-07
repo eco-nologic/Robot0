@@ -146,6 +146,52 @@ void Robot::rotate(float angleDeg, int speed) {
 }
 
 /**
+ * @brief Effectue une rotation pour faire face au Nord magnétique (0°).
+ * @param speed Puissance moteur.
+ */
+void Robot::rotateToNorth(int speed) {
+    float currentHeading = getHeading();  // 0-360 degrees
+    float rotationNeeded = -currentHeading;
+
+    // Normalize to [-180, 180] range for shortest rotation
+    if (rotationNeeded > 180.0f) {
+        rotationNeeded -= 360.0f;
+    } else if (rotationNeeded < -180.0f) {
+        rotationNeeded += 360.0f;
+    }
+
+    rotate(rotationNeeded, speed);
+}
+
+/**
+ * @brief Configure les gains PID pour la marche avant.
+ */
+void Robot::setPidForward(float kp, float ki, float kd) {
+    _pidForward.Kp = kp;
+    _pidForward.Ki = ki;
+    _pidForward.Kd = kd;
+    Serial.printf("PID Forward: Kp=%.2f, Ki=%.2f, Kd=%.2f\n", kp, ki, kd);
+}
+
+/**
+ * @brief Configure les gains PID pour la marche arrière.
+ */
+void Robot::setPidReverse(float kp, float ki, float kd) {
+    _pidReverse.Kp = kp;
+    _pidReverse.Ki = ki;
+    _pidReverse.Kd = kd;
+    Serial.printf("PID Reverse: Kp=%.2f, Ki=%.2f, Kd=%.2f\n", kp, ki, kd);
+}
+
+/**
+ * @brief Configure la vitesse PWM de base.
+ */
+void Robot::setPwmBase(int pwm) {
+    _pwmBase = pwm;
+    Serial.printf("PWM Base: %d\n", pwm);
+}
+
+/**
  * @brief Avance en ligne droite avec correction PID.
  * Utilise la différence entre les encodeurs gauche et droit pour corriger la trajectoire.
  * @param cm Distance à parcourir.
