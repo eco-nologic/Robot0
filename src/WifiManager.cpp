@@ -42,7 +42,7 @@ void WifiManager::_setupHandlers() {
                       "<form action=\"/sequence3\" method=\"post\"><input type=\"submit\" value=\"3️⃣ Boussole (Calibration & Nord)\"></form>"
                       "<form action=\"/fleche\" method=\"post\"><input type=\"submit\" value=\"🎯 Dessiner uniquement la Flèche\"></form>"
                       "<hr><h2>🛠️ Utilitaires Bas Niveau</h2>"
-                      "<form action=\"/angle_droit\" method=\"post\"><input type=\"submit\" value=\"📐 Angle Droit (Simulateur)\"></form>"
+                      "<form action=\"/angle_droit\" method=\"post\"><input type=\"submit\" value=\"📐 4️⃣ Corner 90 (Courbe fluide)\"></form>"
                       "</body></html>";
         _server.send(200, "text/html", page);
     });

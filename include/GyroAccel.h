@@ -27,6 +27,8 @@ public:
     // Heading offset management
     float getHeadingOffset() const { return headingOffset; }
     void setHeadingOffset(float offset) { headingOffset = offset; }
+    void saveHeadingOffsetToEEPROM();
+    void loadHeadingOffsetFromEEPROM();
 
 private:
     // Private constructor for singleton
@@ -37,8 +39,10 @@ private:
     /**
      * Offset de montage du capteur (en degrés)
      * Le capteur n'est pas aligné avec l'avant du robot
+     * Calibrated value: -90° (compass reads 90° high, needs -90° correction)
+     * Can be overridden via GUI "Set & Save to Robot" → saves to EEPROM
      */
-    float headingOffset = -70.0f;
+    float headingOffset = -90.0f;
 };
 
 #endif // GYRO_ACCEL_H

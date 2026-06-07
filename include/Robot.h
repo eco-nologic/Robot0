@@ -30,8 +30,16 @@ public:
     void moveBackward(float cm);
     /** @brief Effectue une rotation sur place. @param angleDeg Angle en degrés (positif = gauche). @param speed Vitesse PWM. */
     void rotate(float angleDeg, int speed = 80);
+    /** @brief Rotation vers le Nord magnétique (0°). */
+    void rotateToNorth(int speed = 80);
     /** @brief Arrête immédiatement les deux moteurs. */
     void stop();
+    /** @brief Configure les gains PID pour la marche avant. */
+    void setPidForward(float kp, float ki, float kd);
+    /** @brief Configure les gains PID pour la marche arrière. */
+    void setPidReverse(float kp, float ki, float kd);
+    /** @brief Configure la vitesse PWM de base. */
+    void setPwmBase(int pwm);
     /** @brief Attente active permettant de garder le serveur web et la télémétrie actifs. @param ms Temps en millisecondes. */
     void wait(uint32_t ms);
     
@@ -39,8 +47,6 @@ public:
     float getHeading();
     /** @brief Accès à l'objet de positionnement (Stylo). */
     RobotPen& getPen() { return _pen; }
-    /** @brief Définit la vitesse PWM de base pour les déplacements. */
-    void setPwmBase(int pwm) { _pwmBase = pwm; }
     /** @brief Récupère la vitesse PWM de base. */
     int getPwmBase() const { return _pwmBase; }
     /** @brief Met à jour les coordonnées X, Y et l'orientation du stylo. */
