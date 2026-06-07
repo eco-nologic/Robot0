@@ -7,6 +7,7 @@
 #include "PIDConfig.h"
 #include "Magnetometer.h"
 #include "GyroAccel.h"
+#include "EmergencyStop.h"
 
 // DÉFENSE : "Pourquoi tout encapsuler dans une classe Robot ?"
 // RÉPONSE : "Pour créer une couche d'abstraction matérielle (HAL). Cela découple la logique de dessin de haut niveau de la manipulation des registres/PWM de bas niveau."

@@ -1,13 +1,24 @@
 #include "Robot.h"
 #include "Telemetry.h"
-#include <WebServer.h>
-
-extern WebServer server;
+#include "WifiManager.h"
 
 /**
  * @brief Constructeur de la classe Robot.
  * Initialise les moteurs avec leurs broches respectives et configure les contrôleurs PID.
  */
+
+// DÉFENSE : "Pourquoi utiliser une liste d'initialisation dans le constructeur ?"
+// RÉPONSE : "Pour l'efficacité et la rigueur. Cela initialise les membres directement lors de leur allocation mémoire, évitant ainsi une double initialisation (construction par défaut suivie d'une affectation). C'est aussi obligatoire pour les objets comme 'Motor' qui n'ont pas de constructeur par défaut."
+
+// DÉFENSE : "Pourquoi ces valeurs pour le PID en marche avant (2.0, 0.1, 0.5) ?"
+// RÉPONSE : "C'est un compromis stabilité/réactivité. Kp=2.0 assure la correction, Ki=0.1 élimine l'erreur statique (dérive) sur la durée, et Kd=0.5 amortit les oscillations pour une trajectoire fluide."
+
+// DÉFENSE : "Pourquoi un Kp plus élevé (5.0) et pas de I/D en marche arrière ?"
+// RÉPONSE : "La marche arrière est souvent utilisée pour des corrections courtes. Un Kp élevé permet de vaincre instantanément l'inertie et le jeu mécanique. L'absence de Ki/Kd simplifie le calcul pour des mouvements où la précision brute prime sur la fluidité."
+
+// DÉFENSE : "Pourquoi une vitesse de base (PWM) de 80 ?"
+// RÉPONSE : "C'est la 'zone de confort' du robot. 80 est assez élevé pour vaincre les frottements secs sans saturer les moteurs, laissant une réserve de puissance (headroom) au PID pour accélérer une roue lors des corrections."
+
 Robot::Robot() 
     : motorD(PIN_EN_D, PIN_IN1_D, PIN_IN2_D, PIN_ENC_D_A, false),
       motorG(PIN_EN_G, PIN_IN1_G, PIN_IN2_G, PIN_ENC_G_A, true),
@@ -57,7 +68,11 @@ float Robot::getHeading() {
 void Robot::wait(uint32_t ms) {
     uint32_t start = millis();
     while (millis() - start < ms) {
-        server.handleClient();
+        if (EmergencyStop::getInstance().isTriggered()) {
+            stop();
+            return;
+        }
+        WifiManager::getInstance().update();
         Telemetry::getInstance().update(*this);
         delay(10);
     }
@@ -112,6 +127,10 @@ void Robot::rotate(float angleDeg, int speed) {
     motorG.resetTicks();
 
     while ((abs(motorD.getTicks()) + abs(motorG.getTicks())) / 2 < ticks) {
+        if (EmergencyStop::getInstance().isTriggered()) {
+            stop();
+            return;
+        }
         if (angleDeg > 0) {
             motorG.drive(-speed);
             motorD.drive(speed);
@@ -133,7 +152,7 @@ void Robot::rotate(float angleDeg, int speed) {
  */
 void Robot::moveForward(float cm) {
     int ticks_target = (int)((cm / ROBOT_ROUE_PERIMETRE) * ROBOT_TICKS_PAR_ROTATION);
-    
+
     Telemetry::getInstance().setTargetCommand(cm, 0.0f);
     Telemetry::getInstance().setMoving(true);
 
@@ -143,6 +162,10 @@ void Robot::moveForward(float cm) {
     _pidForward.integral = 0;
 
     while (motorD.getTicks() < ticks_target || motorG.getTicks() < ticks_target) {
+        if (EmergencyStop::getInstance().isTriggered()) {
+            stop();
+            return;
+        }
         long error = motorG.getTicks() - motorD.getTicks();
         _pidForward.integral = constrain(_pidForward.integral + error, -500, 500);
         float derivative = error - _pidForward.error_prev;
@@ -164,7 +187,7 @@ void Robot::moveForward(float cm) {
  */
 void Robot::moveBackward(float cm) {
     int ticks_target = (int)((cm / ROBOT_ROUE_PERIMETRE) * ROBOT_TICKS_PAR_ROTATION);
-    
+
     Telemetry::getInstance().setTargetCommand(-cm, 0.0f);
     Telemetry::getInstance().setMoving(true);
 
@@ -174,6 +197,10 @@ void Robot::moveBackward(float cm) {
     _pidReverse.integral = 0;
 
     while (motorD.getTicks() < ticks_target && motorG.getTicks() < ticks_target) {
+        if (EmergencyStop::getInstance().isTriggered()) {
+            stop();
+            return;
+        }
         long error = motorG.getTicks() - motorD.getTicks();
         _pidReverse.integral = constrain(_pidReverse.integral + error, -500, 500);
         motorD.drive(-(_pwmBase + (_pidReverse.Kp * error)));

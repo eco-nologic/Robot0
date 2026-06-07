@@ -2,9 +2,8 @@
 #include "Magnetometer.h"
 #include "Telemetry.h"
 #include "SequenceFleche.h"
-#include <WebServer.h>
-
-extern WebServer server; 
+#include "WifiManager.h"
+#include "EmergencyStop.h"
 
 void Sequence3::execute() {
     // 1. Calibration
@@ -17,6 +16,11 @@ void Sequence3::execute() {
     
     unsigned long startTime = millis();
     while(millis() - startTime < 10000) {
+        if (EmergencyStop::getInstance().isTriggered()) {
+            _robot.stop();
+            return;
+        }
+
         _robot.motorG.drive(110);
         _robot.motorD.drive(-110);
         delay(80);
@@ -30,7 +34,7 @@ void Sequence3::execute() {
         if(mag.magnetic.y < minY) minY = mag.magnetic.y;
         if(mag.magnetic.y > maxY) maxY = mag.magnetic.y;
         
-        server.handleClient();
+        WifiManager::getInstance().update();
         Telemetry::getInstance().update(_robot);
     }
     Magnetometer::getInstance().finalizeCalibration(minX, maxX, minY, maxY);
